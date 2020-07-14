@@ -1,5 +1,6 @@
 import React,{useState,useEffect} from 'react';
 import api from './services/api';
+import axios from 'axios';
 
 function App() {
  const [client_id,setClientId] = useState();
@@ -24,7 +25,21 @@ const geraToken = async(e)=>{
   console.log(redirect_uri)
   console.log(code)
   console.log(grant_type)
-  const resposta = await api.post('/', {client_id,client_secret,redirect_uri,code,grant_type});
+  const resposta = await axios({
+    method: 'post',
+    url: 'https://api.instagram.com/oauth/access_token',
+    data: qs.stringify({
+      client_id,
+      client_secret,
+      redirect_uri,
+      code,
+      grant_type
+    }),
+    headers: {
+      'content-type': 'application/x-www-form-urlencoded;charset=utf-8'
+    }
+  })
+  //const resposta = await api.post('/', {client_id,client_secret,redirect_uri,code,grant_type});
 
   console.log(resposta)
 
