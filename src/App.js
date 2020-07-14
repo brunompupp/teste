@@ -26,7 +26,7 @@ const geraToken = async(e)=>{
   console.log(redirect_uri)
   console.log(code)
   console.log(grant_type)
-  const resposta = await axios({
+  const {data} = await axios({
     method: 'post',
     url: 'https://api.instagram.com/oauth/access_token',
     data: qs.stringify({
@@ -41,7 +41,8 @@ const geraToken = async(e)=>{
     }
   })
   //const resposta = await api.post('/', {client_id,client_secret,redirect_uri,code,grant_type});
-
+  setToken(data.access_token);
+  setUserId(data.user_id);
   console.log(resposta)
 
 }
@@ -72,6 +73,20 @@ const geraToken = async(e)=>{
 
           <button type="submit">Gerar Token</button>
         </form>
+      </div>
+
+      <div className="resultado">
+        <div className="group">
+          <label htmlFor="token">Seu Token</label>
+          <input type="text" id="token" value={token}/>
+        </div>
+
+
+        <div className="group">
+          <label htmlFor="user">Seu User ID</label>
+          <input type="text" id="user" value={user_id}/>
+        </div>
+
       </div>
     </div>
   );
