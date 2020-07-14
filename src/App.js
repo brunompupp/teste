@@ -1,5 +1,6 @@
 import React,{useState,useEffect} from 'react';
 import api from './services/api';
+import qs from 'qs';
 import axios from 'axios';
 
 function App() {
