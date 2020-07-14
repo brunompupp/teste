@@ -43,7 +43,7 @@ const geraToken = async(e)=>{
   //const resposta = await api.post('/', {client_id,client_secret,redirect_uri,code,grant_type});
   setToken(data.access_token);
   setUserId(data.user_id);
-  console.log(resposta)
+  console.log(data)
 
 }
 
