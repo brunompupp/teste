@@ -14,6 +14,7 @@ function App() {
  const [refresh, setRefresh] = useState('');
  const [tokenAntigo, setTokenAntigo] = useState('');
  const [expiraNew, setExpiraNew] = useState('');
+ const [erro, setErro] = useState('');
 
 const geraCodigo = async(e)=>{
   e.preventDefault();
@@ -23,12 +24,11 @@ const geraCodigo = async(e)=>{
 
 const geraToken = async(e)=>{
   e.preventDefault();
+  if(!client_secret || !client_id || !redirect_uri || !code){
+    setErro('Preencha todas as informações para continuar');
+    return alert('Preencha todas as informações para continuar')
+  }
   let grant_type = 'authorization_code';
-  console.log(client_id)
-  console.log(client_secret)
-  console.log(redirect_uri)
-  console.log(code)
-  console.log(grant_type)
   let {data} = await axios({
     method: 'post',
     url: 'https://api.instagram.com/oauth/access_token',
