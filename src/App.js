@@ -60,7 +60,7 @@ const geraToken = async(e)=>{
       </form>
 
 
-      <div className="frame">
+      <div className="frame teste">
         {linkAuth && <a href={linkAuth} target="_blank" rel="noopener noreferrer">Link</a>}
       </div>
 
