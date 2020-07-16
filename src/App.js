@@ -4,13 +4,16 @@ import qs from 'qs';
 import axios from 'axios';
 
 function App() {
- const [client_id,setClientId] = useState();
- const [redirect_uri, setUri] = useState();
- const [code, setCode] = useState();
- const [client_secret, setSecret] = useState();
- const [token, setToken] = useState();
- const [user_id, setUserId] = useState();
- const [linkAuth, setlinkAuth] = useState();
+ const [client_id,setClientId] = useState('');
+ const [redirect_uri, setUri] = useState('');
+ const [code, setCode] = useState('');
+ const [client_secret, setSecret] = useState('');
+ const [token, setToken] = useState('');
+ const [user_id, setUserId] = useState('');
+ const [linkAuth, setlinkAuth] = useState('');
+ const [refresh, setRefresh] = useState('');
+ const [tokenAntigo, setTokenAntigo] = useState('');
+ const [expiraNew, setExpiraNew] = useState('');
 
 const geraCodigo = async(e)=>{
   e.preventDefault();
@@ -65,12 +68,40 @@ const geraToken = async(e)=>{
 
 }
 
+
+const refreshToken = async(e)=>{
+  e.preventDefault();
+  try{
+    let data = await api.get(`https://graph.instagram.com/refresh_access_token?grant_type=ig_refresh_token&access_token=${tokenAntigo}`)
+
+    console.log('refresh', data);
+    setRefresh(data.access_token);
+    setExpiraNew(data.expires_in)
+    
+  }catch(e){
+    setRefresh('Token inválido, verifique se está correto, ou tente gerar um novo!');
+    //IGQVJXbVRYVjlSN3JhMWFzQUNlemxpbEdHeDVYUlZAsdVAtd29NQzVWOENQZAFk4ZAjFneGp4WUVCVmN1WU5OcUtBZAkJRWGJaanh6MXIwN1ZAtdzdya253aV9fLVVPVEFYbXJ1QlRYUzVB
+    console.log(e)
+  }
+
+
+}
+const setUrl = (url)=>{
+  let newUrl = url.split('code=');
+  newUrl = newUrl[1].split('#_');
+  console.log('url: ',newUrl[0])
+  setCode(newUrl[0]);
+}
+
  useEffect(()=>{
 
  },[])
 
   return (
     <div className="App">
+      <header>
+        <h1>Gerar Token INSTAGRAM</h1>
+      </header>
       <form onSubmit={geraCodigo}>
         <input type="text" placeholder="Cliente iD" onBlur={e => setClientId(e.target.value)}/>
         <input type="text" placeholder="URI" onBlur={e => setUri(e.target.value)}/>
@@ -87,7 +118,7 @@ const geraToken = async(e)=>{
           <input type="text" value={client_id} placeholder="Cliente ID" onBlur={e => setClientId(e.target.value)}/>
           <input type="text" placeholder="Client Secret" onBlur={e => setSecret(e.target.value)}/>
           <input type="text" placeholder="Redirect URI" value={redirect_uri} onBlur={e => setUri(e.target.value)}/>
-          <input type="text" placeholder="URL gerada" onBlur={e => setCode(e.target.value)}/>
+          <input type="text" placeholder="URL gerada" onBlur={e => setUrl(e.target.value)}/>
 
           <button type="submit">Gerar Token</button>
         </form>
@@ -105,6 +136,23 @@ const geraToken = async(e)=>{
           <input type="text" id="user" value={user_id}/>
         </div>
 
+      </div>
+
+
+      <div className="refresh">
+        <h2>Refresh</h2>
+
+        <form onSubmit={refreshToken}>
+          <input type="text" placeholder="Token Antigo" onChange={e=> setTokenAntigo(e.target.value)}/>
+
+          <button type="submit">Refresh Token</button>
+
+        </form>
+
+        <div className="resultado-refresh">
+          <p><b>Token: </b>{refresh}</p>
+          <p><b>Expira: </b> {expiraNew}</p>
+        </div>
       </div>
     </div>
   );
