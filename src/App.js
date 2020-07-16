@@ -11,7 +11,6 @@ function App() {
  const [token, setToken] = useState();
  const [user_id, setUserId] = useState();
  const [linkAuth, setlinkAuth] = useState();
- const [grant_type, setType] = useState('authorization_code')
 
 const geraCodigo = async(e)=>{
   e.preventDefault();
@@ -21,12 +20,13 @@ const geraCodigo = async(e)=>{
 
 const geraToken = async(e)=>{
   e.preventDefault();
+  let grant_type = 'authorization_code';
   console.log(client_id)
   console.log(client_secret)
   console.log(redirect_uri)
   console.log(code)
   console.log(grant_type)
-  const {data} = await axios({
+  let {data} = await axios({
     method: 'post',
     url: 'https://api.instagram.com/oauth/access_token',
     data: qs.stringify({
@@ -41,9 +41,27 @@ const geraToken = async(e)=>{
     }
   })
   //const resposta = await api.post('/', {client_id,client_secret,redirect_uri,code,grant_type});
-  setToken(data.access_token);
   setUserId(data.user_id);
-  console.log(data)
+
+  let access_token = data.access_token;
+  
+  grant_type= "ig_exchange_token";
+  let dados = await api.get(`https://graph.instagram.com/access_token?grant_type=ig_exchange_token&client_secret=${client_secret}&access_token=${access_token}`)
+  /* let {data} = await axios({
+    method: 'get',
+    url: 'https://api.instagram.com/oauth/access_token',
+    data: qs.stringify({
+      grant_type,
+      client_secret,
+      access_token,
+    }),
+    headers: {
+      'content-type': 'application/x-www-form-urlencoded;charset=utf-8'
+    }
+  }) */
+  setToken(dados.data.access_token);
+  let expira = dados.data.expires_in;
+  console.log(dados,expira)
 
 }
 
