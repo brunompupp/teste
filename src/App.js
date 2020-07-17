@@ -1,147 +1,178 @@
-import React,{useState,useEffect} from 'react';
+import React,{useState} from 'react';
 import api from './services/api';
 import qs from 'qs';
+import moment from 'moment';
 import axios from 'axios';
 
+import './App.css';
+
 function App() {
- const [client_id,setClientId] = useState('');
- const [redirect_uri, setUri] = useState('');
- const [code, setCode] = useState('');
- const [client_secret, setSecret] = useState('');
- const [token, setToken] = useState('');
- const [user_id, setUserId] = useState('');
- const [linkAuth, setlinkAuth] = useState('');
- const [refresh, setRefresh] = useState('');
- const [tokenAntigo, setTokenAntigo] = useState('');
- const [expiraNew, setExpiraNew] = useState('');
- const [erro, setErro] = useState('');
+  const [client_id,setClientId] = useState('');
+  const [redirect_uri, setUri] = useState('');
+  const [code, setCode] = useState('');
+  const [client_secret, setSecret] = useState('');
+  const [token, setToken] = useState('');
+  const [user_id, setUserId] = useState('');
+  const [linkAuth, setlinkAuth] = useState('');
+  const [refresh, setRefresh] = useState('');
+  const [tokenAntigo, setTokenAntigo] = useState('');
+  const [expiraNew, setExpiraNew] = useState('');
+  const [erroUrl, setErroUrl] = useState('');
+  const [erroToken, setErroToken] = useState('');
+  const [erroRefresh, setErroRefresh] = useState('');
 
-const geraCodigo = async(e)=>{
-  e.preventDefault();
-  setlinkAuth(`https://www.instagram.com/oauth/authorize?client_id=${client_id}&redirect_uri=${redirect_uri}&scope=user_profile,user_media&response_type=code`);
-
-}
-
-const geraToken = async(e)=>{
-  e.preventDefault();
-  if(!client_secret || !client_id || !redirect_uri || !code){
-    setErro('Preencha todas as informações para continuar');
-    return alert('Preencha todas as informações para continuar')
-  }
-  let grant_type = 'authorization_code';
-  let {data} = await axios({
-    method: 'post',
-    url: 'https://api.instagram.com/oauth/access_token',
-    data: qs.stringify({
-      client_id,
-      client_secret,
-      redirect_uri,
-      code,
-      grant_type
-    }),
-    headers: {
-      'content-type': 'application/x-www-form-urlencoded;charset=utf-8'
+  const geraCodigo = async(e)=>{
+    e.preventDefault();
+    console.log(client_id, redirect_uri)
+    if(!client_id || !redirect_uri){
+      if(linkAuth){
+        setlinkAuth('')
+      }
+      setErroUrl('Preencha os campos para continuar!')
+      return;
     }
-  })
-  //const resposta = await api.post('/', {client_id,client_secret,redirect_uri,code,grant_type});
-  setUserId(data.user_id);
-
-  let access_token = data.access_token;
-  
-  grant_type= "ig_exchange_token";
-  let dados = await api.get(`https://graph.instagram.com/access_token?grant_type=ig_exchange_token&client_secret=${client_secret}&access_token=${access_token}`)
-  /* let {data} = await axios({
-    method: 'get',
-    url: 'https://api.instagram.com/oauth/access_token',
-    data: qs.stringify({
-      grant_type,
-      client_secret,
-      access_token,
-    }),
-    headers: {
-      'content-type': 'application/x-www-form-urlencoded;charset=utf-8'
-    }
-  }) */
-  setToken(dados.data.access_token);
-  let expira = dados.data.expires_in;
-  console.log(dados,expira)
-
-}
-
-
-const refreshToken = async(e)=>{
-  e.preventDefault();
-  try{
-    let data = await api.get(`https://graph.instagram.com/refresh_access_token?grant_type=ig_refresh_token&access_token=${tokenAntigo}`)
-
-    console.log('refresh', data);
-    setRefresh(data.access_token);
-    setExpiraNew(data.expires_in)
-    
-  }catch(e){
-    setRefresh('Token inválido, verifique se está correto, ou tente gerar um novo!');
-    //IGQVJXbVRYVjlSN3JhMWFzQUNlemxpbEdHeDVYUlZAsdVAtd29NQzVWOENQZAFk4ZAjFneGp4WUVCVmN1WU5OcUtBZAkJRWGJaanh6MXIwN1ZAtdzdya253aV9fLVVPVEFYbXJ1QlRYUzVB
-    console.log(e)
+    setlinkAuth(`https://www.instagram.com/oauth/authorize?client_id=${client_id}&redirect_uri=${redirect_uri}&scope=user_profile,user_media&response_type=code`);
+    return
   }
 
+  const geraToken = async(e)=>{
+    e.preventDefault();
+    if(!client_secret || !client_id || !redirect_uri || !code){
+      setErroToken('Preencha todos os campos para continuar');
+      return
+    }
+    let grant_type = 'authorization_code';
 
-}
-const setUrl = (url)=>{
-  let newUrl = url.split('code=');
-  newUrl = newUrl[1].split('#_');
-  console.log('url: ',newUrl[0])
-  setCode(newUrl[0]);
-}
 
- useEffect(()=>{
+    try{
+      let {data} = await axios({
+        method: 'post',
+        url: 'https://api.instagram.com/oauth/access_token',
+        data: qs.stringify({
+          client_id,
+          client_secret,
+          redirect_uri,
+          code,
+          grant_type
+        }),
+        headers: {
+          'content-type': 'application/x-www-form-urlencoded;charset=utf-8'
+        }
+      })
+      setUserId(data.user_id);
+      let access_token = data.access_token;
+      grant_type= "ig_exchange_token";
+      setErroToken('');
 
- },[])
+
+      try{
+        let dados = await api.get(`https://graph.instagram.com/access_token?grant_type=ig_exchange_token&client_secret=${client_secret}&access_token=${access_token}`)
+        setToken(dados.data.access_token);
+        let expira = dados.data.expires_in;
+        console.log(dados,expira)
+        setErroToken('');
+      }catch(e){
+        console.log(e)
+        setErroToken('Não foi possível concluir a autenticação, verifique se todas as informações estão corretas.');  
+      }
+
+
+      
+    }catch(e){
+      console.log(e);
+      setErroToken('Não foi possível concluir a autenticação, verifique se todas as informações estão corretas.');
+      return
+    }
+
+  }
+
+
+  const refreshToken = async(e)=>{
+    e.preventDefault();
+    if(!tokenAntigo){
+      setErroRefresh('Insira seu token antigo para gerar um novo!');
+      return
+    }
+    try{
+      let data = await api.get(`https://graph.instagram.com/refresh_access_token?grant_type=ig_refresh_token&access_token=${tokenAntigo}`)
+
+      console.log('refresh', data.data.expires_in, data.data.access_token);
+      setRefresh(data.data.access_token);
+      setExpiraNew(moment().seconds(data.data.expires_in).format('DD/MM/yyyy'));
+
+
+      setErroRefresh('');
+      
+    }catch(e){
+      setErroRefresh('Token inválido, verifique se está correto, ou tente gerar um novo!');
+      //IGQVJXbVRYVjlSN3JhMWFzQUNlemxpbEdHeDVYUlZAsdVAtd29NQzVWOENQZAFk4ZAjFneGp4WUVCVmN1WU5OcUtBZAkJRWGJaanh6MXIwN1ZAtdzdya253aV9fLVVPVEFYbXJ1QlRYUzVB
+      console.log(e)
+    }
+
+
+  }
+  const setUrl = (url)=>{
+    if(!url){
+      return
+    }
+    try{
+      let newUrl = url.split('code=');
+      newUrl = newUrl[1].split('#_');
+      console.log('url: ',newUrl[0])
+      setCode(newUrl[0]);
+
+    }catch(e){
+      setCode(url);
+
+      console.log(e)
+    }
+  }
 
   return (
     <div className="App">
       <header>
         <h1>Gerar Token INSTAGRAM</h1>
       </header>
-      <form onSubmit={geraCodigo}>
-        <input type="text" placeholder="Cliente iD" onBlur={e => setClientId(e.target.value)}/>
-        <input type="text" placeholder="URI" onBlur={e => setUri(e.target.value)}/>
-        <button type="submit">Gerar Codigo</button>
-      </form>
 
+      <div className="gera-url">
+        <h2>Gerar Url com o código de acesso</h2>
+        <form onSubmit={geraCodigo}>
+          {erroUrl && <p className="erro">{erroUrl}</p>}
+          <input type="text" placeholder="Cliente iD" onChange={e => setClientId(e.target.value)}/>
+          <input type="text" placeholder="URI" onChange={e => setUri(e.target.value)}/>
+          <button type="submit">Gerar Codigo</button>
+        </form>
 
-      <div className="frame teste">
-        {linkAuth && <a href={linkAuth} target="_blank" rel="noopener noreferrer">Link</a>}
+        
+        
+        {linkAuth && <div className="linkUrl"><a href={linkAuth} target="_blank" rel="noopener noreferrer">Link</a></div>}
+        
+
       </div>
 
-      <div className="token">
+      <div className="gera-token">
+        
+        <h2>Gerar Token de Longa Duração</h2>
+        <p>O token de longa duração expira em 60 dias.</p>
+        
         <form onSubmit={geraToken}>
-          <input type="text" value={client_id} placeholder="Cliente ID" onBlur={e => setClientId(e.target.value)}/>
-          <input type="text" placeholder="Client Secret" onBlur={e => setSecret(e.target.value)}/>
-          <input type="text" placeholder="Redirect URI" value={redirect_uri} onBlur={e => setUri(e.target.value)}/>
-          <input type="text" placeholder="URL gerada" onBlur={e => setUrl(e.target.value)}/>
+          {erroToken && <p className="erro">{erroToken}</p>}
+          <input type="text" value={client_id} placeholder="Cliente ID" onChange={e => setClientId(e.target.value)}/>
+          <input type="text" placeholder="Client Secret" onChange={e => setSecret(e.target.value)}/>
+          <input type="text" placeholder="Redirect URI" value={redirect_uri} onChange={e => setUri(e.target.value)}/>
+          <input type="text" placeholder="URL gerada" onChange={e => setUrl(e.target.value)}/>
 
           <button type="submit">Gerar Token</button>
         </form>
+
+      
+        {token && <div className="resultado"><p className="token">Aqui está seu Token:</p><p>{token}</p></div>}
+        {user_id && <div className="resultado"><p className="user">Aqui está seu User ID:</p><p>{user_id}</p></div>}
+      
       </div>
-
-      <div className="resultado">
-        <div className="group">
-          <label htmlFor="token">Seu Token</label>
-          <input type="text" id="token" value={token}/>
-        </div>
-
-
-        <div className="group">
-          <label htmlFor="user">Seu User ID</label>
-          <input type="text" id="user" value={user_id}/>
-        </div>
-
-      </div>
-
 
       <div className="refresh">
-        <h2>Refresh</h2>
-
+        <h2>Atualizar seu Token expirado</h2>
         <form onSubmit={refreshToken}>
           <input type="text" placeholder="Token Antigo" onChange={e=> setTokenAntigo(e.target.value)}/>
 
@@ -149,10 +180,11 @@ const setUrl = (url)=>{
 
         </form>
 
-        <div className="resultado-refresh">
-          <p><b>Token: </b>{refresh}</p>
-          <p><b>Expira: </b> {expiraNew}</p>
-        </div>
+        {erroRefresh && <p className="erro">{erroRefresh}</p>}
+
+        {refresh && <div className="resultado-refresh"><p className="token"><b>Aqui está seu novo Token: </b></p><p>{refresh}</p></div>}
+        {expiraNew&& <div className="resultado-refresh"><p className="token"><b>Expira em: </b></p><p>{expiraNew}</p></div>}
+      
       </div>
     </div>
   );
